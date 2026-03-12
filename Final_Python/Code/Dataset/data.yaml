@@ -1,0 +1,7 @@
+path: /Users/ksanskar/Work/Course_Project_Python/Code/Dataset
+train: /Users/ksanskar/Work/Course_Project_Python/Code/Dataset/images/train
+val: /Users/ksanskar/Work/Course_Project_Python/Code/Dataset/images/val
+names:
+  0: space-empty
+  1: space-occupied
+ 

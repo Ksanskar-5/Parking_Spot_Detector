@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOLOv5 Parking Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --bg: #f4f8fb;
+            --card-bg: #fff;
+            --occupied: #e74c3c;
+            --empty: #27ae60;
+            --sidebar: #1e293b;
+            --sidebar-text: #e0eafc;
+            --sidebar-active: #3b82f6;
+        }
+        * { box-sizing: border-box; }
+
+        body, html {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', Arial, sans-serif;
+            background: var(--bg);
+            color: #22223b;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--sidebar);
+            color: var(--sidebar-text);
+            width: 260px;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2.5rem 1rem 1rem 1rem;
+            box-shadow: 2px 0 16px rgba(31,38,135,0.08);
+        }
+        .sidebar .logo {
+            font-size: 2.3rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 2.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+        .sidebar .logo i {
+            color: var(--primary-light);
+        }
+        .sidebar .desc {
+            font-size: 1.1rem;
+            color: #b6c4e2;
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+        .sidebar .parking-list-section {
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+        .sidebar .parking-list-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #b6c4e2;
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.5px;
+        }
+        .sidebar .parking-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar .parking-list li {
+            margin-bottom: 0.4rem;
+        }
+        .sidebar .parking-list button {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--sidebar-text);
+            text-align: left;
+            font-size: 1.08rem;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            transition: background 0.15s, color 0.15s;
+        }
+        .sidebar .parking-list button.active,
+        .sidebar .parking-list button:hover {
+            background: var(--sidebar-active);
+            color: #fff;
+        }
+        .sidebar .info-list {
+            margin-top: auto;
+            width: 100%;
+        }
+        .sidebar .info-list li {
+            list-style: none;
+            margin: 0.7rem 0;
+            font-size: 1rem;
+            color: #b6c4e2;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+        .sidebar .info-list li i {
+            color: var(--primary-light);
+        }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 2rem;
+            min-width: 0;
+        }
+        .dashboard-title {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 1.2rem;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+        .dashboard-card {
+            background: var(--card-bg);
+            border-radius: 22px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
+            padding: 2.5rem 2.5rem 2rem 2.5rem;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: box-shadow 0.2s;
+        }
+        .dashboard-card:hover {
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.14);
+        }
+        .image-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .image-name {
+            font-size: 1.1rem;
+            color: #6c757d;
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .parking-img {
+            width: 100%;
+            max-width: 480px;
+            border-radius: 16px;
+            border: 3px solid var(--primary-light);
+            box-shadow: 0 4px 18px rgba(44, 62, 80, 0.09);
+            margin-bottom: 1.1rem;
+            background: #f5f7fa;
+            object-fit: contain; /* Changed from cover to contain */
+            /* aspect-ratio: 16/9; */ /* Remove or comment out for natural ratio */
+            display: block;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 1.2rem 0 0 0;
+            gap: 1.5rem;
+        }
+        .status-box {
+            flex: 1;
+            background: #f5f7fa;
+            border-radius: 14px;
+            padding: 1.2rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(44, 62, 80, 0.04);
+            transition: background 0.2s;
+            min-width: 120px;
+        }
+        .status-icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.3rem;
+        }
+        .occupied .status-icon {
+            color: var(--occupied);
+            filter: drop-shadow(0 2px 6px #e74c3c22);
+        }
+        .empty .status-icon {
+            color: var(--empty);
+            filter: drop-shadow(0 2px 6px #27ae6022);
+        }
+        .status-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d334a;
+        }
+        .status-value {
+            font-size: 2.1rem;
+            font-weight: 800;
+            margin-top: 0.1rem;
+            color: #22223b;
+        }
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                flex-direction: row;
+                width: 100vw;
+                min-width: 0;
+                height: auto;
+                padding: 1.2rem 1rem;
+                box-shadow: 0 2px 16px rgba(31,38,135,0.09);
+                align-items: flex-start;
+                justify-content: flex-start;
+            }
+            .sidebar .logo { font-size: 1.5rem; margin-bottom: 0; }
+            .sidebar .desc { display: none; }
+            .sidebar .info-list { display: none; }
+            .sidebar .parking-list-section {
+                margin-bottom: 0;
+            }
+        }
+        @media (max-width: 700px) {
+            .main-content {
+                padding: 1rem 0.2rem;
+            }
+            .dashboard-card {
+                padding: 1.5rem 0.5rem 1.2rem 0.5rem;
+                max-width: 98vw;
+            }
+            .parking-img {
+                max-width: 98vw;
+            }
+            .status-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+        @media (max-width: 430px) {
+            .dashboard-title {
+                font-size: 1.3rem;
+            }
+            .sidebar {
+                height: 56px;
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo"><i class="fas fa-parking"></i> ParkVision</div>
+            <div class="desc">Smart, real-time parking detection powered by YOLOv5.</div>
+            <div class="parking-list-section">
+                <div class="parking-list-title">Parking Areas</div>
+                <ul class="parking-list" id="parking-list">
+                    <li>
+                        <button class="active" onclick="selectParking('A', this)">
+                            <i class="fas fa-square-parking"></i> Parking Lot A
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="selectParking('B', this)">
+                            <i class="fas fa-square-parking"></i> Parking Lot B
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="selectParking('C', this)">
+                            <i class="fas fa-square-parking"></i> Parking Lot C
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <ul class="info-list">
+                
+            </ul>
+        </aside>
+        <main class="main-content">
+            <div class="dashboard-title">
+                <i class="fas fa-parking"></i> Real-Time Parking Status
+            </div>
+            <div class="dashboard-card">
+                <div class="image-section">
+                    <div class="image-name">
+                        <i class="fas fa-image"></i>
+                        <span id="image-name">Loading...</span>
+                    </div>
+                    <img class="parking-img" id="parking-img" src="" alt="Parking Image">
+                </div>
+                <div class="status-row">
+                    <div class="status-box occupied">
+                        <span class="status-icon"><i class="fas fa-car"></i></span>
+                        <span class="status-label">Occupied</span>
+                        <span class="status-value" id="occupied">?</span>
+                    </div>
+                    <div class="status-box empty">
+                        <span class="status-icon"><i class="fas fa-square-parking"></i></span>
+                        <span class="status-label">Empty</span>
+                        <span class="status-value" id="empty">?</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        // Default parking lot
+        let currentParking = 'A';
+        function updateStatus() {
+            fetch(`/latest_image?parking=${currentParking}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("image-name").textContent = data.image.split("/").pop();
+                    document.getElementById("occupied").textContent = data.occupied;
+                    document.getElementById("empty").textContent = data.empty;
+                    const img = document.getElementById("parking-img");
+                    img.src = data.image + "?t=" + new Date().getTime(); // cache busting
+                });
+        }
+
+        function selectParking(parking, btn) {
+            currentParking = parking;
+            // Update active state
+            document.querySelectorAll('.parking-list button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateStatus();
+        }
+
+        updateStatus();
+        setInterval(updateStatus, 10000);
+    </script>
+</body>
+</html>

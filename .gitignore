@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+venv/
+env/
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.DS_Store
+*.log
+*.pkl
+*.pth
+*.pt
+# Output images
+Final_Python/Code/Latest/
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Python virtual environments (large binary files)
+Final_Python/Code/Python1/
+Final_Python/Code/Python2/
+**/lib/python*/site-packages/
+
+# Documents & presentations
+*.pdf
+*.docx
+*.doc
+*.pptx
+*.ppt
+*.pages
+*.key
+*.xlsx
+*.xls
